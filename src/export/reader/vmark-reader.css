@@ -52,7 +52,11 @@
   transform: translateY(10px);
   transition: opacity 0.2s, visibility 0.2s, transform 0.2s;
   z-index: 9999;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Self-contained (no access to app tokens) — keep macOS and Windows fonts
+   * both reachable so exported reader HTML looks native on both. */
+  font-family: "PingFang SC", "SF Pro Text", "Segoe UI Variable Text",
+    "Segoe UI", "Microsoft YaHei", -apple-system, BlinkMacSystemFont,
+    Roboto, system-ui, sans-serif;
   font-size: 13px;
 }
 

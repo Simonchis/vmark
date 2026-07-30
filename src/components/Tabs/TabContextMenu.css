@@ -15,7 +15,9 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--popup-shadow);
   padding: 5px;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  /* Use the app's --font-sans token so Windows hits Segoe UI Variable /
+   * Microsoft YaHei instead of only the macOS-first cascade. */
+  font-family: var(--font-sans);
   font-size: var(--font-size-base);
 }
 

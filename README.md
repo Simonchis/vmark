@@ -44,7 +44,15 @@ brew install xiaolai/tap/vmark
 - Apple Silicon: `VMark_x.x.x_aarch64.dmg`
 - Intel: `VMark_x.x.x_x64.dmg`
 
-**Windows & Linux:** Pre-built binaries on the [Releases page](https://github.com/xiaolai/vmark/releases). macOS is the primary platform; other builds are best-effort.
+**Windows:** Download `VMark_x.x.x_x64-setup.exe` (NSIS installer) or the
+`.msi` from the [Releases page](https://github.com/xiaolai/vmark/releases). No
+Rust, MSVC, or any compiler toolchain required for users — the installer is a
+self-contained signed build produced by CI.
+
+**Linux:** Download the `.AppImage` / `.deb` from the
+[Releases page](https://github.com/xiaolai/vmark/releases).
+
+macOS is the primary platform; Windows and Linux builds are best-effort.
 
 ---
 
@@ -72,6 +80,13 @@ When you file an issue, AI fixes it with full context of the project's conventio
 ## Building from Source
 
 **Prerequisites:** [Node.js](https://nodejs.org/) 20+, [pnpm](https://pnpm.io/) 10+, [Rust](https://www.rust-lang.org/tools/install) (stable), [Tauri v2 prerequisites](https://v2.tauri.app/start/prerequisites/)
+
+> **Windows contributors:** Building from source needs the Rust toolchain
+> (`winget install Rustlang.Rustup`) **and** the MSVC C++ build tools
+> (`winget install Microsoft.VisualStudio.2022.BuildTools` with the
+> `VCTools` workload — Tauri v2 on Windows targets the `*-pc-windows-msvc`
+> triple). WebView2 ships with Windows 10/11 by default. If you only want
+> to *use* VMark, download the pre-built installer instead — see Install above.
 
 ```bash
 git clone https://github.com/xiaolai/vmark.git

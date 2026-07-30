@@ -5,6 +5,25 @@
 /* Enable selector-based dark mode for Tailwind v4 */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Bundled CJK font — cross-platform identical rendering.
+   Declared at the top level (not inside :root) because @font-face is an
+   at-rule and cannot be nested inside a selector block. */
+@font-face {
+  font-family: "Noto Sans SC";
+  src: url("/fonts/NotoSansSC-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Noto Sans SC";
+  src: url("/fonts/NotoSansSC-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Theme CSS Variables - GitHub Style */
 :root {
   /* Core colors - Paper theme default */
@@ -85,12 +104,49 @@
   --popup-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   --popup-shadow-dark: 0 4px 12px rgba(0, 0, 0, 0.4);
 
-  /* Typography */
-  --font-sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "SF Pro SC",
-    "SF Pro Text", "Helvetica Neue", -apple-system, BlinkMacSystemFont,
-    "Segoe UI", Roboto, Oxygen, Ubuntu, Helvetica, Arial, sans-serif;
-  --font-mono: "SauceCodePro NF", "Courier New", Consolas,
-    monospace;
+  /* Typography.
+   *
+   * Noto Sans SC is bundled as a WOFF2 web font so every platform renders
+   * CJK text identically — no more macOS-vs-Windows drift. The @font-face
+   * blocks are declared BEFORE --font-sans so the family name is registered
+   * by the time the stack is evaluated.
+   *
+   * Font-stack semantics (not just "value coincidence"): the order here is the
+   * cross-platform fallback the browser walks character-by-character. The first
+   * installed font that has a glyph for the current character wins.
+   *
+   * Design goals:
+   *  - All platforms hit the bundled Noto Sans SC for CJK — identical rendering.
+   *  - macOS/iOS still hit PingFang SC + SF Pro for the native Latin look.
+   *  - Windows 11 hits Segoe UI Variable (Text) for sharper small-size rendering;
+   *    Win10 falls back to Segoe UI.
+   *  - `\@media` can't select the OS, so consistent ordering is what gives each
+   *    platform its best native type.
+   *
+   * Do NOT move the `BlinkMacSystemFont` / `-apple-system` family names lower —
+   * macOS Safari relies on them being present and the cascade is stable.
+   */
+
+  --font-sans: "PingFang SC", "SF Pro SC", "SF Pro Text",
+
+    /* Windows 11+ (sharper at small sizes than plain Segoe UI) */
+    "Segoe UI Variable Text", "Segoe UI Variable",
+    /* Windows 10 fallback */
+    "Segoe UI",
+
+    "Hiragino Sans GB",
+    /* Bundled CJK — identical on all platforms, replaces Microsoft YaHei */
+    "Noto Sans SC",
+
+    "Helvetica Neue", -apple-system, BlinkMacSystemFont,
+    Roboto, Oxygen, Ubuntu, Helvetica, Arial, sans-serif;
+
+  /* Monospace stack. Cascadia ships with Windows 10/11 and renders far better
+   * than Courier New at editor sizes; Consolas is the Win10 fallback.
+   * SauceCodePro Nerd Font is preferred where installed (macOS users who
+   * installed a Nerd Font). */
+  --font-mono: "SauceCodePro NF", "Cascadia Code", "Cascadia Mono",
+    "JetBrains Mono", Consolas, "Courier New", monospace;
 
   /* Text emphasis colors */
   --strong-color: rgb(63, 86, 99);
