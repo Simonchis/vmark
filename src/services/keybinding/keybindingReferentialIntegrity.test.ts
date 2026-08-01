@@ -17,19 +17,23 @@ import { registerBrowserCommands } from "@/services/commands/browserCommands";
 import { registerTabCommands } from "@/hooks/tabCommands";
 import { registerFileCommands } from "@/hooks/fileCommands";
 import { registerGenieCommands } from "@/services/commands/genieCommands";
+import { registerWorkspaceCommands } from "@/services/commands/workspaceCommands";
+import { registerExportCommands } from "@/services/commands/exportCommands";
 
 const shortcutIds = new Set(DEFAULT_SHORTCUTS.map((s) => s.id));
 
 beforeAll(() => {
   _resetCommandBus();
   // The command surface every KEYBINDING commandId is drawn from (app / view /
-  // explorer / lint / tab / file / browser / genies).
+  // explorer / lint / tab / file / workspace / export / browser / genies).
   registerMiscCommands();
   registerViewCommands();
   registerBrowserCommands();
   registerTabCommands();
   registerFileCommands();
   registerGenieCommands();
+  registerWorkspaceCommands();
+  registerExportCommands();
 });
 
 describe("KEYBINDINGS — referential integrity (WI-1.3)", () => {

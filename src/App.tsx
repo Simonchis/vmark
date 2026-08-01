@@ -26,6 +26,7 @@ import { WindowStatusOverlay } from "@/components/WindowStatusPanel/WindowStatus
 import { CoherenceOverlays } from "@/components/CoherenceOverlays";
 import { useWindowStatus } from "@/hooks/useWindowStatus";
 import { CommandPalette } from "@/components/CommandPalette";
+import { isWindowsPlatform } from "@/utils/platform";
 import { WindowProvider, useIsDocumentWindow, useWindowLabel } from "@/contexts/WindowContext";
 import { useUIStore } from "@/stores/uiStore";
 import { useSettingsStore } from "@/stores/settingsStore";
@@ -176,7 +177,7 @@ function MainLayout() {
   useTabModeSync();
   useWindowStatus();
 
-  const className = appShellClassName({ focusMode: focusModeEnabled, typewriterMode: typewriterModeEnabled, findBarOpen, browserWorkspaceActive, workspaceRailVisible: showWorkspaceRail });
+  const className = appShellClassName({ focusMode: focusModeEnabled, typewriterMode: typewriterModeEnabled, findBarOpen, browserWorkspaceActive, workspaceRailVisible: showWorkspaceRail, windowsChrome: isWindowsPlatform() });
 
   return (
     <AppShell

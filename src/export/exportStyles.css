@@ -13,6 +13,9 @@
   font-family: var(--font-sans);
   font-size: var(--editor-font-size);
   line-height: var(--editor-line-height);
+  /* lnum + tnum: old-style-figure fonts (e.g. Georgia) keep their digit
+   * heights consistent; tabular-nums alone would not. Mirrors editor.css. */
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 .export-surface-editor {

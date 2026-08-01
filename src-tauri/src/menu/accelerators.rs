@@ -45,6 +45,17 @@ pub fn commit_rebuild(snapshot: HashMap<String, String>) {
     }
 }
 
+/// The last-applied accelerator for a menu id, if any (custom shortcuts
+/// included). Read-only access for `menu::tree` serialization — Tauri's
+/// menu wrapper exposes no accelerator getter, so the baseline is the
+/// single source of truth for what the frontend should display.
+pub fn cached_accelerator(id: &str) -> Option<String> {
+    ACCEL_CACHE
+        .lock()
+        .ok()
+        .and_then(|a| a.as_ref().and_then(|m| m.get(id).cloned()))
+}
+
 /// Pure diff of two accelerator maps.
 /// Returns the subset of `next` whose accelerator differs from `current`
 /// (including keys absent from `current`). Keys present only in `current`

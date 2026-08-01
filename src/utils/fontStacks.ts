@@ -26,12 +26,17 @@ export const fontStacks = {
     literata: "Literata, Georgia, serif", // Google reading font
   },
   cjk: {
-    system: '"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
-    pingfang: '"PingFang SC", "PingFang TC", sans-serif', // Apple Books
-    songti: '"Songti SC", "STSong", "SimSun", serif',
-    kaiti: '"Kaiti SC", "STKaiti", "KaiTi", serif',
-    notoserif: '"Noto Serif CJK SC", "Source Han Serif SC", serif',
-    sourcehans: '"Source Han Sans SC", "Noto Sans CJK SC", sans-serif',
+    // System default: macOS gets PingFang, Windows gets Microsoft YaHei (UI),
+    // both fall back to the bundled Noto Sans SC for identical rendering.
+    // Note: Windows 10/11 ships "Microsoft YaHei UI", not "Microsoft YaHei".
+    system: '"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Microsoft YaHei UI", "Noto Sans SC", sans-serif',
+    pingfang: '"PingFang SC", "PingFang TC", "Noto Sans SC", sans-serif', // Apple Books
+    // Songti: macOS → Songti SC, Windows → SimSun / SimSun-ExtB, Linux → Noto Serif SC
+    songti: '"Songti SC", "STSong", "SimSun", "SimSun-ExtB", "Noto Serif SC", "Noto Serif CJK SC", serif',
+    // Kaiti: macOS → Kaiti SC, Windows → KaiTi / FangSong, Linux → Noto Serif SC
+    kaiti: '"Kaiti SC", "STKaiti", "KaiTi", "FangSong", "Noto Serif SC", "Noto Serif CJK SC", serif',
+    notoserif: '"Noto Serif SC", "Noto Serif CJK SC", "Source Han Serif SC", "SimSun", "SimSun-ExtB", serif',
+    sourcehans: '"Source Han Sans SC", "Noto Sans CJK SC", "Microsoft YaHei", "Microsoft YaHei UI", "Noto Sans SC", sans-serif',
   },
   mono: {
     system: 'ui-monospace, "SF Mono", Menlo, Monaco, monospace',

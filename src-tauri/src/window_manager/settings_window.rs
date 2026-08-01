@@ -102,7 +102,23 @@ pub fn show_settings_window_section(
             .visible(true);
     }
 
+    // Windows: self-drawn chrome like the document windows — no native title
+    // bar. The frontend Settings page provides its own drag region. tao 0.35
+    // leaves WS_CAPTION on undecorated top-level windows, so strip it after
+    // build (same workaround as app_setup::strip_caption).
+    #[cfg(target_os = "windows")]
+    {
+        builder = builder.decorations(false).shadow(true);
+    }
+
     let window = builder.build()?;
+
+    #[cfg(target_os = "windows")]
+    {
+        if let Ok(hwnd) = window.hwnd() {
+            let _ = super::strip_caption(hwnd.0);
+        }
+    }
 
     #[cfg(target_os = "macos")]
     {

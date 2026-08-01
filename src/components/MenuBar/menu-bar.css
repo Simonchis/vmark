@@ -1,0 +1,143 @@
+/*
+ * MenuBar — frontend title-bar menu (Windows self-drawn chrome).
+ *
+ * The menu bar is a compact horizontal row of top-level buttons inside the
+ * title bar. The dropdown uses the shared popup surface language: 1px border,
+ * --radius-lg, --popup-shadow. Follows the focus rules (U-shaped underline,
+ * 33-focus-indicators.md).
+ */
+.menu-bar {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  min-width: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.menu-bar__item {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.menu-bar__button {
+  height: 100%;
+  padding: 0 var(--space-2);
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-color);
+  font-size: var(--font-size-base);
+  cursor: default;
+  white-space: nowrap;
+}
+
+.menu-bar__button:hover:not(:disabled),
+.menu-bar__button--open {
+  background: var(--hover-bg);
+}
+
+.menu-bar__button:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: default;
+}
+
+/* Focus: U-shaped underline (33-focus-indicators.md). */
+.menu-bar__button:focus-visible {
+  outline: none;
+  position: relative;
+}
+
+.menu-bar__button:focus-visible::after {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  background: var(--primary-color);
+  border-radius: 1px;
+}
+
+/* Dropdown surface — shared popup language (32-component-patterns.md). */
+.menu-bar__dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 220px;
+  max-width: 340px;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  padding: var(--popup-padding);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--bg-color);
+  box-shadow: var(--popup-shadow);
+  z-index: var(--z-popup);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  animation: popup-fade-in var(--duration-fast) ease-out;
+}
+
+.menu-bar__menuitem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  width: 100%;
+  padding: var(--space-1) var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-color);
+  font-size: var(--font-size-base);
+  text-align: left;
+  cursor: default;
+  white-space: nowrap;
+}
+
+.menu-bar__menuitem-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menu-bar__accelerator {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-sm);
+  margin-left: var(--space-4);
+  flex-shrink: 0;
+}
+
+.menu-bar__menuitem--active {
+  background: var(--accent-bg);
+  color: var(--accent-primary);
+}
+
+.menu-bar__menuitem--active .menu-bar__accelerator {
+  color: var(--text-secondary);
+}
+
+.menu-bar__menuitem:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: default;
+}
+
+.menu-bar__menuitem:focus-visible {
+  outline: none;
+  background: var(--accent-bg);
+}
+
+.menu-bar__separator {
+  height: 1px;
+  background: var(--border-color);
+  margin: var(--space-1) 0;
+}
+
+.menu-bar__empty {
+  padding: var(--space-2);
+  color: var(--text-tertiary);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}

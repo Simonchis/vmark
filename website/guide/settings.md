@@ -12,7 +12,7 @@ Controls the visual theme and window behavior.
 
 ### Theme
 
-Choose one of six color themes. The active theme is indicated by a ring around its swatch.
+Choose one of six color themes. The active theme is indicated by a ring around its swatch. All six themes are available on macOS and Windows — both platforms draw their own window chrome, so the native title bar cannot clash with the theme. On Linux, the window chrome is drawn by the OS (light/dark only), so the picker offers **White** and **Night** — themes that map exactly onto what the OS can render. A theme chosen elsewhere is preserved in settings and restored when you return to macOS/Windows.
 
 | Theme | Background | Style |
 |-------|-----------|-------|

@@ -55,7 +55,7 @@
   /* Self-contained (no access to app tokens) — keep macOS and Windows fonts
    * both reachable so exported reader HTML looks native on both. */
   font-family: "PingFang SC", "SF Pro Text", "Segoe UI Variable Text",
-    "Segoe UI", "Microsoft YaHei", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", "Microsoft YaHei", "Microsoft YaHei UI", -apple-system, BlinkMacSystemFont,
     Roboto, system-ui, sans-serif;
   font-size: 13px;
 }

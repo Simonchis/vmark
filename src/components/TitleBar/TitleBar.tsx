@@ -32,6 +32,9 @@ import { useTabStore } from "@/stores/tabStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useTitleBarRename } from "./useTitleBarRename";
 import { getFileNameWithoutExtension } from "@/utils/pathUtils";
+import { isWindowsPlatform } from "@/utils/platform";
+import { MenuBar } from "@/components/MenuBar";
+import { WindowControls } from "@/components/WindowControls";
 import "./title-bar.css";
 
 interface TitleBarProps {
@@ -58,7 +61,11 @@ function TitleBarBanner({
       aria-label={t("aria.appTitleBar")}
       {...drag}
     >
+      {/* Windows self-drawn chrome: menu bar at the left of the title bar,
+          window controls at the right (macOS uses native traffic lights). */}
+      {isWindowsPlatform() && <MenuBar />}
       {children}
+      {isWindowsPlatform() && <WindowControls />}
     </div>
   );
 }

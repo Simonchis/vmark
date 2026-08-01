@@ -14,13 +14,17 @@ describe("selectableThemeIds", () => {
     expect(selectableThemeIds(true)).toEqual(ALL_IDS);
   });
 
-  it("offers only white and night off macOS", () => {
+  it("offers the whole catalog on Windows (self-drawn chrome)", () => {
+    expect(selectableThemeIds(false, true)).toEqual(ALL_IDS);
+  });
+
+  it("offers only white and night on Linux/other", () => {
     expect(selectableThemeIds(false)).toEqual(["white", "night"]);
   });
 
-  // Windows/Linux title bars are light-or-dark only, so every offered theme
+  // Linux/other title bars are light-or-dark only, so every offered theme
   // must map onto one of those without ambiguity.
-  it("offers exactly one light and one dark option off macOS", () => {
+  it("offers exactly one light and one dark option on Linux/other", () => {
     const offered = selectableThemeIds(false);
     const dark = offered.filter((id) => themes[id].isDark);
     const light = offered.filter((id) => !themes[id].isDark);
@@ -48,13 +52,19 @@ describe("coerceThemeId", () => {
     }
   });
 
-  it("keeps the two supported themes off macOS", () => {
+  it("leaves every theme untouched on Windows (self-drawn chrome)", () => {
+    for (const id of ALL_IDS) {
+      expect(coerceThemeId(id, false, true)).toBe(id);
+    }
+  });
+
+  it("keeps the two supported themes on Linux/other", () => {
     for (const id of NON_MAC_THEME_IDS) {
       expect(coerceThemeId(id, false)).toBe(id);
     }
   });
 
-  // A user who picked sepia on macOS, then synced settings to Windows, must
+  // A user who picked sepia on macOS, then synced settings to Linux, must
   // land on a theme of the same polarity — not be flipped from light to dark.
   it("maps an unsupported light theme to white", () => {
     for (const id of ALL_IDS.filter((i) => !themes[i].isDark)) {
@@ -68,7 +78,7 @@ describe("coerceThemeId", () => {
     }
   });
 
-  it("never returns an unsupported theme off macOS", () => {
+  it("never returns an unsupported theme on Linux/other", () => {
     for (const id of ALL_IDS) {
       expect(NON_MAC_THEME_IDS).toContain(coerceThemeId(id, false));
     }

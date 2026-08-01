@@ -65,6 +65,13 @@
   line-height: var(--editor-line-height, 1.6);
   color: var(--text-color);
   overflow-wrap: break-word; /* Break long unbroken words to prevent overflow */
+  /* Force LINING (uppercase-height, lnum) TABULAR (equal-width, tnum) numerals
+   * so digits like "18" don't misalign. tabular-nums alone only fixes width;
+   * fonts that default to old-style figures (Georgia, and macOS-only Athelas /
+   * Charter / Literata falling back to it on Windows) still vary digit heights
+   * unless lnum is also requested. Palatino/Segoe UI default to lining figures,
+   * which is why they never showed the bug. */
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 .tiptap-editor > div {

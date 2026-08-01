@@ -135,7 +135,9 @@
     "Segoe UI",
 
     "Hiragino Sans GB",
-    /* Bundled CJK — identical on all platforms, replaces Microsoft YaHei */
+    /* Windows CJK — "Microsoft YaHei UI" is the actual family name on Win10/11 */
+    "Microsoft YaHei", "Microsoft YaHei UI",
+    /* Bundled CJK — identical on all platforms */
     "Noto Sans SC",
 
     "Helvetica Neue", -apple-system, BlinkMacSystemFont,

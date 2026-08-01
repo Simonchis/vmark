@@ -55,6 +55,8 @@ macro_rules! all_commands {
             #[cfg(debug_assertions)]
             menu::debug_file_menu_item_ids,
             menu::set_locale,
+            menu::tree::get_menu_tree,
+            menu::tree::menu_click,
             window_manager::open_file_in_new_window,
             window_manager::open_workspace_in_new_window,
             window_manager::open_workspace_with_files_in_new_window,

@@ -1,0 +1,60 @@
+/*
+ * Window control buttons — Windows self-drawn chrome.
+ * Compact 46x32px buttons (the Windows standard hit target) pinned to the
+ * top-right of the window; the close button gets the Windows-style hover
+ * (danger red) while min/max use the neutral hover token.
+ */
+.window-controls {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  flex-shrink: 0;
+}
+
+.window-controls__btn {
+  width: 46px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: default;
+  padding: 0;
+  transition: background var(--duration-fast) ease-out, color var(--duration-fast) ease-out;
+}
+
+.window-controls__btn svg {
+  width: 10px;
+  height: 10px;
+}
+
+.window-controls__btn:hover {
+  background: var(--hover-bg);
+  color: var(--text-color);
+}
+
+/* Close hover: Windows convention — danger red fills the button. */
+.window-controls__btn--close:hover {
+  background: var(--error-color);
+  color: var(--contrast-text, #fff);
+}
+
+/* Focus: visible underline (accessibility, U-shaped indicator). */
+.window-controls__btn:focus-visible {
+  outline: none;
+  position: relative;
+}
+
+.window-controls__btn:focus-visible::after {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  background: var(--primary-color);
+  border-radius: 1px;
+}

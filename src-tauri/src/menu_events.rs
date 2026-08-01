@@ -31,7 +31,7 @@ mod dispatch;
 #[path = "menu_events_windows.rs"]
 mod windows;
 
-pub use dispatch::handle_menu_event;
+pub use dispatch::{handle_menu_event, handle_menu_id};
 
 /// Pending menu event to emit when window becomes ready
 #[derive(Clone)]

@@ -1,22 +1,21 @@
 /**
  * Which themes a platform can actually offer.
  *
- * Purpose: Windows and Linux draw the title bar (and, on Windows, the menu
- * bar) themselves, and the only choice the OS accepts is light or dark. A
- * sepia or mint theme therefore has no matching chrome available at any
- * price — the window would always be half-themed. Those platforms are limited
- * to one light theme and one dark theme, each of which maps exactly onto what
- * the OS can render.
- *
- * macOS is unaffected: its Settings window uses an overlay title bar and its
- * menus live in the system bar, so the full catalog stays available.
+ * Purpose: macOS and Windows draw their own window chrome (overlay title bar
+ * with hidden native bar, and undecorated windows respectively), so every
+ * theme in the catalog is renderable and the full set is offered. Linux and
+ * other platforms still use the OS-drawn title bar, and the only choice the
+ * OS accepts is light or dark. A sepia or mint theme there therefore has no
+ * matching chrome available at any price — the window would always be
+ * half-themed. Those platforms are limited to one light theme and one dark
+ * theme, each of which maps exactly onto what the OS can render.
  *
  * Key decisions:
  *   - Coercion preserves *polarity*. Someone who chose sepia (light) and moves
- *     to Windows gets white, not night — settings sync between machines must
+ *     to Linux gets white, not night — settings sync between machines must
  *     not flip a user from light to dark.
- *   - Pure and platform-agnostic: callers pass `isMac`, so this stays testable
- *     without stubbing `navigator`.
+ *   - Pure and platform-agnostic: callers pass `isMac`/`isWindows`, so this
+ *     stays testable without stubbing `navigator`.
  *
  * @coordinates-with hooks/useEffectiveTheme.ts — coerces the resolved theme
  * @coordinates-with pages/settings/AppearanceSettings.tsx — filters the swatches
@@ -26,17 +25,22 @@
 import { themes } from "./themes";
 import type { ThemeId } from "./themes";
 
-/** The light/dark pair offered on Windows and Linux. */
+/** The light/dark pair offered on platforms with OS-drawn chrome. */
 export const NON_MAC_THEME_IDS: readonly ThemeId[] = Object.freeze([
   "white",
   "night",
 ] as ThemeId[]);
 
-/** Themes the theme picker should offer on this platform. */
-export function selectableThemeIds(isMac: boolean): ThemeId[] {
-  // Copies both branches so a caller mutating the result cannot corrupt the
-  // frozen constant or the catalog's key order.
-  return isMac ? (Object.keys(themes) as ThemeId[]) : [...NON_MAC_THEME_IDS];
+/**
+ * Themes the theme picker should offer on this platform. Platforms with
+ * self-drawn window chrome (macOS overlay, Windows undecorated) can render
+ * the full catalog.
+ */
+export function selectableThemeIds(isMac: boolean, isWindows = false): ThemeId[] {
+  if (isMac || isWindows) return Object.keys(themes) as ThemeId[];
+  // Copies the branch so a caller mutating the result cannot corrupt the
+  // frozen constant.
+  return [...NON_MAC_THEME_IDS];
 }
 
 /**
@@ -46,8 +50,8 @@ export function selectableThemeIds(isMac: boolean): ThemeId[] {
  * settings are a real case, and the theme layer already treats them as
  * recoverable.
  */
-export function coerceThemeId(id: ThemeId, isMac: boolean): ThemeId {
-  if (isMac) return id;
+export function coerceThemeId(id: ThemeId, isMac: boolean, isWindows = false): ThemeId {
+  if (isMac || isWindows) return id;
   if (NON_MAC_THEME_IDS.includes(id)) return id;
   return themes[id]?.isDark ? "night" : "white";
 }

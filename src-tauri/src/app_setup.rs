@@ -40,6 +40,16 @@ pub(crate) fn machine_id_hash() -> String {
 /// Extracted from `run`'s former inline `.setup` closure so the setup steps are
 /// individually readable and the builder chain stays declarative.
 pub(crate) fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+    // Debug: verify the merged platform config reached the runtime.
+    for w in app.config().app.windows.iter() {
+        log::info!(
+            "[setup] window '{}' decorations={} shadow={}",
+            w.label,
+            w.decorations,
+            w.shadow
+        );
+    }
+
     app.manage(pty::PtyState::default());
 
     // Coherence layer: per-installation writer identity (spec §2.2) +
@@ -59,6 +69,34 @@ pub(crate) fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::
     });
     let menu = menu::localized::create_localized_menu(app.handle(), None)?;
     app.set_menu(menu)?;
+
+    // Windows: the `main` window's chrome is configured per platform via
+    // tauri.windows.conf.json (decorations: false + shadow). tao 0.35 has a
+    // bug where decorations(false) leaves WS_CAPTION on top-level windows, so
+    // strip the caption/sysmenu styles post-creation. The window-level empty
+    // menu hides the native menu bar (the frontend title bar draws the menu);
+    // the app-wide menu is kept because it backs `get_menu_tree`
+    // serialization. Document windows get the same treatment in their
+    // builder.
+    #[cfg(target_os = "windows")]
+    {
+        if let Some(main_win) = app.get_webview_window("main") {
+            match tauri::menu::Menu::new(app.handle()) {
+                Ok(empty_menu) => {
+                    if let Err(e) = main_win.set_menu(empty_menu) {
+                        log::warn!("[setup] failed to clear main window menu: {e}");
+                    }
+                }
+                Err(e) => log::warn!("[setup] failed to build empty menu: {e}"),
+            }
+            if let Ok(hwnd) = main_win.hwnd() {
+                if let Err(e) = crate::window_manager::strip_caption(hwnd.0) {
+                    log::warn!("[setup] failed to strip main window caption: {e}");
+                }
+            }        } else {
+            log::warn!("[setup] main window not found at setup time");
+        }
+    }
 
     // Disable App Nap so the webview stays active when backgrounded
     // (prevents MCP bridge timeouts from suspended JS)

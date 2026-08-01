@@ -40,6 +40,7 @@ mod commands;
 mod dynamic;
 pub mod localized;
 pub mod menu_state;
+pub mod tree;
 
 use std::sync::Mutex;
 

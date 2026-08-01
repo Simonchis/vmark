@@ -133,7 +133,13 @@ fn route_to_document_window(app: &AppHandle, event: PendingMenuEvent) {
 
 /// Route a native menu click to the correct frontend window via Tauri events.
 pub fn handle_menu_event(app: &AppHandle, event: tauri::menu::MenuEvent) {
-    let id = event.id().as_ref();
+    handle_menu_id(app, event.id().as_ref());
+}
+
+/// Shared dispatch entry for a menu item id — used by both the native menu
+/// click path (`handle_menu_event`) and the frontend title-bar menu
+/// (`menu::tree::menu_click`, Windows self-drawn chrome).
+pub fn handle_menu_id(app: &AppHandle, id: &str) {
     match classify_menu_id(id) {
         // Custom Quit (Cmd+Q) is handled in Rust so we can coordinate
         // unsaved-changes prompts. request_quit applies the confirm-quit gate

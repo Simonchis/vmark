@@ -30,7 +30,7 @@ import { initialState } from "@/stores/settingsStore/defaults";
 import { useSystemAppearanceStore } from "@/stores/systemAppearanceStore";
 import type { ThemeId } from "@/theme/themes";
 import { coerceThemeId } from "@/theme/themeAvailability";
-import { isMacPlatform } from "@/utils/platform";
+import { isMacPlatform, isWindowsPlatform } from "@/utils/platform";
 
 type EffectiveThemeInput = Pick<
   AppearanceSettings,
@@ -53,10 +53,11 @@ export function resolveEffectiveThemeId(
  * Resolve, then narrow to what this platform's native chrome can render.
  *
  * Kept separate from `resolveEffectiveThemeId` so that stays pure and
- * platform-agnostic: it resolves, it doesn't validate. Windows/Linux only
- * draw light or dark chrome, so a theme outside that pair would always render
- * half-themed. `appearance.theme` is never mutated, so the user's original
- * pick survives a round trip back to macOS.
+ * platform-agnostic: it resolves, it doesn't validate. Linux only
+ * draws light or dark chrome, so a theme outside that pair would always render
+ * half-themed there. Windows draws its own chrome (undecorated windows) so
+ * the full catalog renders. `appearance.theme` is never mutated, so the
+ * user's original pick survives a round trip back to macOS.
  */
 function resolveForPlatform(
   appearance: EffectiveThemeInput,
@@ -64,7 +65,8 @@ function resolveForPlatform(
 ): ThemeId {
   return coerceThemeId(
     resolveEffectiveThemeId(appearance, prefersDark),
-    isMacPlatform()
+    isMacPlatform(),
+    isWindowsPlatform()
   );
 }
 

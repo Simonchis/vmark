@@ -151,6 +151,16 @@ export const KEYBINDINGS: readonly Binding[] = [
   // events route to the same commands via useCommandBootstrap.
   globalBinding("save", "file.save"),
   globalBinding("saveAs", "file.saveAs"),
+  // File lifecycle shortcuts, DOM-owned so they survive the Windows
+  // self-drawn-chrome menu removal (the native menu bar, and with it the
+  // menu accelerators, no longer exists there). Mod-n/new, Mod-o/quick-open
+  // and Mod-w/close are the editor-safe chords (Tiptap has no mapping for
+  // them); Mod-p print and Mod-, settings are window-wide by nature.
+  globalBinding("newFile", "file.new"),
+  globalBinding("openFolder", "workspace.openFolder"),
+  globalBinding("print", "export.pdf"),
+  globalBinding("preferences", "app.preferences"),
+  globalBinding("saveAllQuit", "file.saveAllQuit"),
   // AI genie picker (migrated from useGenieShortcuts' Cmd+Y keydown). Toggles
   // the per-window picker; the "Search Genies…" menu event routes to the
   // sibling genies.openPicker command via useCommandBootstrap.

@@ -80,8 +80,8 @@ describe("KEYBINDINGS — view shortcut migration (WI-3.2)", () => {
     }
   });
 
-  it("has the 11 global + 1 native + 18 view + 2 explorer + 1 containment bindings", () => {
-    expect(KEYBINDINGS).toHaveLength(33);
+  it("has the 11 global + 1 native + 18 view + 5 file + 2 explorer + 1 containment bindings", () => {
+    expect(KEYBINDINGS).toHaveLength(38);
   });
 });
 

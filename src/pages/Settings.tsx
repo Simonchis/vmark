@@ -30,12 +30,13 @@ import { useTheme } from "@/hooks/useTheme";
 import { useUpdateBroadcast, useUpdateListener } from "@/hooks/useUpdateSync";
 import { isImeKeyEvent } from "@/utils/imeGuard";
 import { safeUnlistenAsync } from "@/utils/safeUnlisten";
-import { isMacPlatform } from "@/utils/platform";
+import { isMacPlatform, isWindowsPlatform } from "@/utils/platform";
 import { SettingsSearchContext } from "./settings/SettingsSearchContext";
 import { SettingsSearchResults, type SearchablePanel } from "./settings/SettingsSearchResults";
 import { SearchInput } from "./settings/components";
 import { SETTINGS_PANELS, SEARCHABLE_PANEL_IDS, type Section } from "./settings/panels";
 import "./settings/settings-search.css";
+import { WindowControls } from "@/components/WindowControls";
 
 // Hook to handle Cmd+W for settings window
 function useSettingsClose() {
@@ -123,6 +124,10 @@ function isValidSection(value: string): value is Section {
 export function SettingsPage() {
   const { t } = useTranslation("settings");
   const isMac = isMacPlatform();
+  const isWindows = isWindowsPlatform();
+  // Self-drawn chrome: macOS (overlay) and Windows (undecorated) both need
+  // the frontend drag region; the native title bar is hidden on both.
+  const hasSelfDrawnChrome = isMac || isWindows;
   // Read initial section from URL query params
   const getInitialSection = (): Section => {
     const params = new URLSearchParams(window.location.search);
@@ -226,7 +231,7 @@ export function SettingsPage() {
         className="w-52 shrink-0 border-r border-gray-200 dark:border-gray-700
                    bg-[var(--bg-secondary)] flex flex-col"
       >
-        {isMac && <div data-tauri-drag-region className="h-12 shrink-0" />}
+        {hasSelfDrawnChrome && <div data-tauri-drag-region className="h-12 shrink-0" />}
         {/* Search box */}
         <div className="px-3 pb-2">
           <SearchInput
@@ -262,7 +267,7 @@ export function SettingsPage() {
           update card's button column), and the whole window grows a
           document-level horizontal scrollbar. */}
       <div className="flex-1 flex flex-col min-w-0">
-        {isMac && <div data-tauri-drag-region className="h-12 shrink-0" />}
+        {hasSelfDrawnChrome && <div data-tauri-drag-region className="h-12 shrink-0" />}
         {/* Content */}
         <SettingsSearchContext.Provider value={normalizedQuery}>
           <div
@@ -278,7 +283,7 @@ export function SettingsPage() {
         </SettingsSearchContext.Provider>
       </div>
 
-      {isMac && (
+      {hasSelfDrawnChrome && (
         <div
           data-tauri-drag-region
           className="absolute top-0 right-0 h-12 flex items-center justify-center pointer-events-none"
@@ -287,6 +292,13 @@ export function SettingsPage() {
           <span className="text-sm font-medium text-[var(--text-color)]">
             {t("title")}
           </span>
+        </div>
+      )}
+      {/* Windows: self-drawn window controls (min/max/close) — the native
+          title bar is hidden on undecorated windows. */}
+      {isWindows && (
+        <div className="absolute top-0 right-0 h-12 z-10">
+          <WindowControls />
         </div>
       )}
     </div>

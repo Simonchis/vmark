@@ -8,10 +8,11 @@ import { FOCUS_DIM_OPACITY } from "@/hooks/useTheme";
 // match (theme/themeAvailability.ts), so the platform is pinned rather than
 // inherited from jsdom. Defaults to macOS — the full catalog — with the
 // narrowed Windows/Linux picker covered in its own describe below.
-const platform = vi.hoisted(() => ({ isMac: true }));
+const platform = vi.hoisted(() => ({ isMac: true, isWindows: false }));
 vi.mock("@/utils/platform", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/utils/platform")>()),
   isMacPlatform: () => platform.isMac,
+  isWindowsPlatform: () => platform.isWindows,
 }));
 
 beforeEach(() => {

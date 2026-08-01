@@ -12,6 +12,32 @@
   box-sizing: border-box;
 }
 
+/* Windows: the menu bar docks left, window controls dock right, and the
+   filename centers in the remaining space. macOS keeps the centered layout
+   (native traffic lights sit outside the flex flow). */
+.windows-chrome .title-bar {
+  justify-content: flex-start;
+  align-items: stretch;
+  padding-top: 0;
+}
+
+.windows-chrome .title-bar .menu-bar {
+  flex-shrink: 0;
+}
+
+.windows-chrome .title-bar .title-bar-content {
+  flex: 1;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.windows-chrome .title-bar .window-controls {
+  flex-shrink: 0;
+}
+
 /* Keep the application chrome legible around a native webpage even when the
    editor is using a colored or dark theme. The page itself is not recolored. */
 .browser-workspace-active .title-bar {

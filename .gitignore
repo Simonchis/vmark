@@ -165,6 +165,9 @@ reports/mutation/
 src/**/__screenshots__/
 .vitest-attachments/
 
+# Ad-hoc window screenshots taken during desktop chrome debugging
+/*.png
+
 # jscpd duplication reports (run with `pnpm dup`)
 reports/duplication/
 

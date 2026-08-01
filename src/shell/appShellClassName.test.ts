@@ -20,6 +20,10 @@ describe("appShellClassName", () => {
     ).toBe("focus-mode browser-workspace-active");
   });
 
+  it("emits windows-chrome when the flag is set (self-drawn title bar)", () => {
+    expect(appShellClassName({ ...NONE, windowsChrome: true })).toBe("windows-chrome");
+  });
+
   it("emits every modifier when all flags are set", () => {
     expect(appShellClassName({
       focusMode: true,
@@ -27,8 +31,9 @@ describe("appShellClassName", () => {
       findBarOpen: true,
       browserWorkspaceActive: true,
       workspaceRailVisible: true,
+      windowsChrome: true,
     })).toBe(
-      "focus-mode typewriter-mode find-bar-open browser-workspace-active workspace-rail-visible",
+      "windows-chrome focus-mode typewriter-mode find-bar-open browser-workspace-active workspace-rail-visible",
     );
   });
 });

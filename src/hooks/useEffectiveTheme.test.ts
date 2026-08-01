@@ -2,13 +2,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook } from "@testing-library/react";
 
 // The platform decides whether the resolved theme is narrowed to the
-// light/dark pair Windows and Linux can actually draw chrome for
-// (theme/themeAvailability.ts). Pinned explicitly rather than inherited from
+// light/dark pair Linux can actually draw chrome for
+// (theme/themeAvailability.ts). Windows draws its own chrome, so the full
+// catalog renders there. Pinned explicitly rather than inherited from
 // jsdom, so these cases state which platform they describe.
-const platform = vi.hoisted(() => ({ isMac: true }));
+const platform = vi.hoisted(() => ({ isMac: true, isWindows: false }));
 vi.mock("@/utils/platform", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/utils/platform")>()),
   isMacPlatform: () => platform.isMac,
+  isWindowsPlatform: () => platform.isWindows,
 }));
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useSystemAppearanceStore } from "@/stores/systemAppearanceStore";
@@ -133,12 +135,14 @@ describe("useEffectiveThemeId", () => {
   });
 });
 
-// Windows and Linux draw their own title bar (and, on Windows, menu bar), and
-// the OS only accepts light or dark. A theme outside that pair would always
-// render half-themed, so the resolved id is narrowed to one that matches.
-describe("platform narrowing (Windows/Linux)", () => {
+// Linux draws its own title bar, and the OS only accepts light or dark. A
+// theme outside that pair would always render half-themed, so the resolved
+// id is narrowed to one that matches. (Windows self-draws chrome; see the
+// Windows describe below.)
+describe("platform narrowing (Linux)", () => {
   beforeEach(() => {
     platform.isMac = false;
+    platform.isWindows = false;
   });
 
   it("narrows an unsupported light theme to white", () => {
@@ -190,5 +194,36 @@ describe("platform narrowing (Windows/Linux)", () => {
 
     setPrefersDark(true);
     expect(result.current).toBe("night");
+  });
+});
+
+// Windows draws its own window chrome (undecorated windows, self-drawn title
+// bar + menu), so every theme in the catalog renders — no narrowing.
+describe("platform narrowing (Windows)", () => {
+  beforeEach(() => {
+    platform.isMac = false;
+    platform.isWindows = true;
+  });
+
+  it("keeps unsupported-light themes (sepia) as-is", () => {
+    setAppearance({ theme: "sepia", followSystemAppearance: false });
+    expect(getEffectiveThemeId()).toBe("sepia");
+  });
+
+  it("keeps unsupported-dark themes (solarized) as-is", () => {
+    setAppearance({ theme: "solarized", followSystemAppearance: false });
+    expect(getEffectiveThemeId()).toBe("solarized");
+  });
+
+  it("keeps the follow-system pair untouched", () => {
+    setAppearance({
+      followSystemAppearance: true,
+      systemLightTheme: "mint",
+      systemDarkTheme: "solarized",
+    });
+    setPrefersDark(false);
+    expect(getEffectiveThemeId()).toBe("mint");
+    setPrefersDark(true);
+    expect(getEffectiveThemeId()).toBe("solarized");
   });
 });

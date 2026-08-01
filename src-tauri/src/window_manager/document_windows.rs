@@ -116,6 +116,20 @@ fn build_document_window(
             .accept_first_mouse(true);
     }
 
+    // Windows: fully self-drawn chrome — no native title bar, no native menu
+    // bar (the menu lives in the frontend title bar). `shadow(true)` keeps the
+    // OS drop shadow, and tao's WM_NCHITTEST handles edge resizing of
+    // undecorated windows, so nothing else needs emulating. The empty window
+    // menu hides the app-wide menu bar (same pattern as settings_window.rs);
+    // `app.menu()` keeps the full tree for `get_menu_tree` serialization.
+    #[cfg(target_os = "windows")]
+    {
+        builder = builder
+            .decorations(false)
+            .shadow(true)
+            .menu(tauri::menu::Menu::new(app)?);
+    }
+
     builder.build()?;
 
     Ok(())
