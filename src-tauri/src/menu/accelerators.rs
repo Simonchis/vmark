@@ -1,16 +1,20 @@
 //! Differential accelerator updates.
 //!
-//! Purpose: Mutate only the accelerators that actually changed, instead of
+//! Purpose: Update only the accelerators that actually changed, instead of
 //! rebuilding the entire menu tree. Each `MenuItem::set_accelerator` is one
 //! main-thread hop, so changing one shortcut costs ~1 hop instead of the
 //! ~150 hops a full rebuild requires. On Windows the difference is the
-//! ~150 ms UI-thread stall that made the Settings window freeze (Issue #825).
+//! ~150 ms UI-thread stall that made the Settings window freeze (Issue #825),
+//! and expose the resolved accelerators via `cached_accelerator` so the
+//! Windows MenuBar can display each item's shortcut.
 //!
 //! Backed by one cache: `ACCEL_CACHE` — the last-applied accelerator per
 //! menu-id. `create_localized_menu` collects every resolved accelerator into
 //! a local snapshot while it builds and calls `commit_rebuild()` only after
 //! the menu tree is fully constructed, so a failed rebuild leaves the
 //! previous baseline intact instead of a partial, lying one.
+//! `cached_accelerator()` serves the cache to `tree::serialize_menu_tree` so
+//! the Windows MenuBar can display the resolved shortcut for each item.
 //!
 //! `MenuItem<Wry>` handles are looked up by walking the live menu tree on
 //! every diff call. The walk is ~30 main-thread hops; combined with the

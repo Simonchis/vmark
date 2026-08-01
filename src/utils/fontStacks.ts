@@ -1,15 +1,19 @@
 /**
  * Font Stacks
  *
- * Purpose: Pure font-family stack definitions and resolution for the editor's
- *   `--font-sans` / `--font-mono` design tokens. No DOM access, no store
- *   imports — leaf-pure per ADR-013 (`src/utils/`).
+ * Purpose: Pure font-family stack definitions and resolution for the
+ *   editor's `--font-sans` / `--font-mono` design tokens, naming the real
+ *   Windows CJK families as fallbacks. No DOM access, no store imports —
+ *   leaf-pure per ADR-013 (`src/utils/`).
  *
  * Key decisions:
  *   - Latin, CJK, and mono families each carry a system fallback.
  *   - The sans stack is `<latin>, <cjk>`; the Latin stack's trailing generic
  *     family is stripped first so CJK glyph resolution actually reaches the CJK
  *     fonts (issue #1056).
+ *   - CJK stacks name the real Windows font families too (Microsoft YaHei UI,
+ *     SimSun-ExtB, FangSong, Noto Serif SC / Noto Sans SC) — macOS-only names
+ *     like "SimSun" silently fell back to the generic family on Windows.
  *
  * @coordinates-with hooks/useTheme.ts — consumes these to emit CSS vars
  * @coordinates-with components/Terminal/terminalSessionStoreSync.ts — live mono sync

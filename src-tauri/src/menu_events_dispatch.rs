@@ -5,12 +5,15 @@
 //! via `#[path]` as a child module so it can use the parent's private
 //! emit/queue helpers.
 //!
-//! Pipeline: `handle_menu_event` → `classify_menu_id` (pure) → small handler
-//! → emit/queue helper in `menu_events.rs`.
+//! Pipeline: `handle_menu_event` (native) / `handle_menu_id` (shared, also
+//! used by the Windows MenuBar `menu_click` command) → `classify_menu_id`
+//! (pure) → small handler → emit/queue helper in `menu_events.rs`.
 //!
 //! Key decisions:
 //!   - `classify_menu_id` and `decide_document_routing` are pure so the
 //!     dispatch contract is testable without a Tauri `AppHandle`.
+//!   - `handle_menu_id` is the single shared entry for both native clicks and
+//!     frontend MenuBar clicks, so Windows self-drawn menus behave identically.
 //!   - Malformed dynamic ids (e.g. `recent-file-abc`) classify as `Generic`,
 //!     matching the historical fall-through behavior.
 //!   - Recent-file/workspace and open/open-folder/quick-open share one

@@ -1,12 +1,16 @@
 //! One-time app setup and app-level event dispatch.
 //!
-//! Purpose: Hosts `run()`'s setup closure and the `RunEvent` / window-event
-//! handlers so `lib.rs` stays a declarative composition root. Extracted
+//! Purpose: Hosts `run()`'s setup closure, the `RunEvent` / window-event
+//! handlers, and the Windows self-drawn chrome setup (hide the native menu
+//! bar via an empty per-window menu, strip the OS caption). Extracted
 //! verbatim from `lib.rs` to keep that file under the size gate.
 //!
 //! Key decisions:
 //!   - Window close is intercepted for document windows (main, doc-*) to allow
 //!     dirty-document prompts; non-document windows close immediately.
+//!   - Windows self-drawn chrome: after `set_menu`, the native menu bar is
+//!     hidden via an empty per-window menu and the OS caption is stripped with
+//!     `window_manager::strip_caption`; the frontend renders MenuBar/WindowControls.
 //!   - `machine_id_hash()` generates a stable anonymous device identifier via
 //!     SHA-256(hostname + OS + arch), sent as `X-Machine-Id` header on update checks.
 

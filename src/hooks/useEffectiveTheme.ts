@@ -14,11 +14,13 @@
  * (`themes[id] ?? themes.paper`) — `resolveEffectiveThemeId` resolves, it
  * doesn't validate, and is deliberately pure so it stays platform-agnostic.
  *
- * The exported hook and getter additionally narrow the result to what the
- * platform's native chrome can render (`theme/themeAvailability.ts`): Windows
- * and Linux draw their own title bar and accept only light or dark, so a theme
- * outside that pair would always render half-themed. `appearance.theme` is
- * never mutated, so the user's pick survives a round trip back to macOS.
+ * Key decisions: the exported hook and getter additionally narrow the
+ * result to what the platform's native chrome can render
+ * (`theme/themeAvailability.ts`): macOS and Windows (self-drawn chrome)
+ * accept the full catalog; Linux draws its own title bar and accepts only
+ * light or dark, so a theme outside that pair would always render
+ * half-themed. `appearance.theme` is never mutated, so the user's pick
+ * survives a round trip back to a full-catalog platform.
  *
  * @coordinates-with stores/systemAppearanceStore.ts — OS dark-mode observation
  * @coordinates-with stores/settingsStore.ts — appearance preferences

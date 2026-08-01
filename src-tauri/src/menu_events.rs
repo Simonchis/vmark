@@ -1,9 +1,11 @@
 //! # Menu Event Dispatcher
 //!
-//! Purpose: Routes native menu clicks to the correct frontend window via Tauri events.
+//! Purpose: Routes menu clicks — native menu items and Windows frontend
+//! MenuBar clicks (via the `menu_click` command) — to the correct frontend
+//! window via Tauri events.
 //!
-//! Pipeline: User clicks menu item → `handle_menu_event` (in
-//! `menu_events_dispatch.rs`) → emits `menu:{id}` to focused window.
+//! Pipeline: User clicks menu item → `handle_menu_event` / `handle_menu_id`
+//! (in `menu_events_dispatch.rs`) → emits `menu:{id}` to focused window.
 //!
 //! This file owns the window-readiness/queueing machinery and the event
 //! constructors; id classification and per-action handlers live in the

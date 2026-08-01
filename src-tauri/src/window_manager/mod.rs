@@ -15,7 +15,13 @@
 //! | `path_validation` | Security gates for frontend-supplied paths / workspace roots |
 //! | `commands` | `open_*_in_new_window`, `close_window`, quit commands |
 //! | `settings_window` | Settings window singleton (create / focus / navigate) |
-//! | `native_theme` | Keeps OS-drawn chrome (title bar, Windows menu bar) on the in-app theme |
+//! | `native_theme` | Keeps macOS OS-drawn chrome (title bar, menu bar) on the in-app theme |
+//! | `strip_caption` (top-level, Windows) | Removes WS_CAPTION/SYSMENU/min-max from undecorated windows |
+//!
+//! Key decisions:
+//!   - Windows windows are created undecorated (per-platform config) and
+//!     `strip_caption` removes the residual caption styles that tao's
+//!     `decorations(false)` leaves on top-level windows.
 //!
 //! Everything is re-exported here so call sites keep using
 //! `crate::window_manager::...` (and `lib.rs`'s `generate_handler!` paths

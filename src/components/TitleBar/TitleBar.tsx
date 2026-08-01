@@ -13,6 +13,11 @@
  *   - DocumentTitleBar — filename display + double-click inline rename.
  *   - TitleBar — the shell that picks a variant.
  *
+ * Key decisions: on Windows (self-drawn chrome) the banner additionally
+ * renders `<MenuBar />` on the left and `<WindowControls />` on the right,
+ * replacing the hidden native title/menu bars; macOS keeps the overlay
+ * title bar.
+ *
  * Key decisions:
  *   - The entire title bar is a Tauri drag region (data-tauri-drag-region)
  *     except while renaming (so text selection/caret work).

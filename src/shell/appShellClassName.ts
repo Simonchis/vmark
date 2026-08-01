@@ -1,9 +1,10 @@
 /**
  * appShellClassName
  *
- * Purpose: Compute the AppShell root's modifier class list from the document
- * window's UI flags. Extracted from App.tsx so the modifier set stays readable
- * and testable instead of a single compressed expression.
+ * Purpose: Computes the AppShell root's modifier class list from the
+ * document window's UI flags (including `windowsChrome`, which enables the
+ * Windows self-drawn chrome layout). Extracted from App.tsx so the modifier
+ * set stays readable and testable instead of a single compressed expression.
  *
  * @module shell/appShellClassName
  */

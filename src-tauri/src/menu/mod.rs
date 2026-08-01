@@ -1,9 +1,13 @@
 //! # Application Menu
 //!
 //! Purpose: Builds the native application menu bar with localized labels and
-//! keyboard accelerators, using `rust-i18n` for translation.
+//! keyboard accelerators, using `rust-i18n` for translation, and serializes it
+//! (`tree`) for the Windows frontend MenuBar via the `get_menu_tree` command.
 //!
 //! Pipeline: `app_setup::setup_app` -> `localized::create_localized_menu()` -> Tauri `app.set_menu()`.
+//! Pipeline: on Windows the native bar is hidden via an empty per-window menu
+//! and the frontend renders the serialized tree; clicks route back through
+//! `menu_click` -> `menu_events::handle_menu_id`.
 //! Items whose presence depends on a setting are adjusted after that:
 //! `browser_menu_item` shows/hides "New Browser Tab" and re-applies itself after
 //! every rebuild.
