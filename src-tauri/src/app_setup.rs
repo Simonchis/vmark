@@ -1,16 +1,17 @@
 //! One-time app setup and app-level event dispatch.
 //!
 //! Purpose: Hosts `run()`'s setup closure, the `RunEvent` / window-event
-//! handlers, and the Windows self-drawn chrome setup (hide the native menu
-//! bar via an empty per-window menu). Extracted verbatim from `lib.rs` to keep
-//! that file under the size gate.
+//! handlers, and the Windows self-drawn chrome setup (undecorate the main
+//! window at runtime, hide the native menu bar via an empty per-window menu).
+//! Extracted verbatim from `lib.rs` to keep that file under the size gate.
 //!
 //! Key decisions:
 //!   - Window close is intercepted for document windows (main, doc-*) to allow
 //!     dirty-document prompts; non-document windows close immediately.
-//!   - Windows self-drawn chrome: after `set_menu`, the native menu bar is
-//!     hidden via an empty per-window menu; tao remains responsible for its
-//!     undecorated-window styles and non-client-area bookkeeping.
+//!   - Windows self-drawn chrome: the config-declared `decorations: false`
+//!     does not reliably reach the runtime for the config-created `main`
+//!     window, so setup normalizes it with `set_decorations(false)`; the
+//!     native menu bar is hidden via an empty per-window menu.
 //!   - `machine_id_hash()` generates a stable anonymous device identifier via
 //!     SHA-256(hostname + OS + arch), sent as `X-Machine-Id` header on update checks.
 
@@ -64,14 +65,23 @@ pub(crate) fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::
     let menu = menu::localized::create_localized_menu(app.handle(), None)?;
     app.set_menu(menu)?;
 
-    // Windows: the `main` window's chrome is configured per platform via
-    // tauri.windows.conf.json (decorations: false + shadow). The window-level
-    // empty menu hides the native menu bar (the frontend title bar draws the
-    // menu); the app-wide menu is kept because it backs `get_menu_tree`
-    // serialization. Document windows get the same treatment in their builder.
+    // Windows: the `main` window is created from config, and the platform
+    // merge of tauri.windows.conf.json (decorations: false + shadow) does not
+    // reliably reach the runtime — the window keeps its native caption. Make
+    // the chrome explicit instead: `set_decorations(false)` clears tao's
+    // decoration flags so its WM_NCCALCSIZE handling erases the caption, the
+    // same mechanism the builder-created document/settings windows use. The
+    // window-level empty menu hides the native menu bar (the frontend title
+    // bar draws the menu); the app-wide menu is kept because it backs
+    // `get_menu_tree` serialization.
     #[cfg(target_os = "windows")]
     {
         if let Some(main_win) = app.get_webview_window("main") {
+            if main_win.is_decorated().unwrap_or(false) {
+                if let Err(e) = main_win.set_decorations(false) {
+                    log::warn!("[setup] failed to undecorate main window: {e}");
+                }
+            }
             match tauri::menu::Menu::new(app.handle()) {
                 Ok(empty_menu) => {
                     if let Err(e) = main_win.set_menu(empty_menu) {
