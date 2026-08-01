@@ -85,16 +85,43 @@ async function getStore(): Promise<SecureStore> {
 }
 
 /**
+ * Upper bound for the store-plugin handshake. bootstrap() awaits
+ * initSecureStorage BEFORE mounting React, so a wedged invoke (a debug
+ * bridge plugin intercepting IPC, a stuck plugin host, …) would otherwise
+ * leave the whole window blank forever. On timeout we fall back to
+ * localStorage exactly like a store error.
+ */
+export const STORE_LOAD_TIMEOUT_MS = 5_000;
+
+/** Rejects with an error if `promise` does not settle within `ms`. */
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+    promise.then(
+      (value) => { clearTimeout(timer); resolve(value); },
+      (error) => { clearTimeout(timer); reject(error); },
+    );
+  });
+}
+
+/**
  * Pre-load the Tauri store into the in-memory cache.
  * Must be called before Zustand stores hydrate.
  *
  * Also performs one-time migration from localStorage if data exists there.
  */
-export async function initSecureStorage(keys: string[]): Promise<void> {
+export async function initSecureStorage(
+  keys: string[],
+  options: { timeoutMs?: number } = {},
+): Promise<void> {
   if (initialized) return;
 
   try {
-    const store = await getStore();
+    const store = await withTimeout(
+      getStore(),
+      options.timeoutMs ?? STORE_LOAD_TIMEOUT_MS,
+      "Secure store load",
+    );
 
     for (const key of keys) {
       // Check if Tauri store has this key

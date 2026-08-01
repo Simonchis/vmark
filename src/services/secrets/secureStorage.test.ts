@@ -93,6 +93,22 @@ describe("secureStorage", () => {
       // Fallback mode keeps localStorage as the persistence layer.
       expect(localStorage.getItem("shape-key")).toBe('{"data":"v"}');
     });
+
+    it("falls back to localStorage when the store load hangs (wedged IPC)", async () => {
+      // If the plugin-store invoke never resolves (e.g. a debug bridge plugin
+      // wedging the IPC channel), bootstrap must NOT wait forever — the whole
+      // window would stay blank because React never mounts.
+      const { load } = await import("@tauri-apps/plugin-store");
+      (load as ReturnType<typeof vi.fn>).mockReturnValueOnce(new Promise(() => {}));
+      _resetForTesting();
+      localStorage.setItem("hang-key", '{"data":"v"}');
+
+      await initSecureStorage(["hang-key"], { timeoutMs: 20 });
+
+      const storage = createSecureStorage();
+      expect(storage.getItem("hang-key")).toBe('{"data":"v"}');
+      expect(localStorage.getItem("hang-key")).toBe('{"data":"v"}');
+    });
   });
 
   describe("createSecureStorage", () => {
