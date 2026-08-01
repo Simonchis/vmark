@@ -129,9 +129,9 @@ function MenuBarItem({
         ref={buttonRef}
         type="button"
         role="menuitem"
-        className={["menu-bar__button", open ? "menu-bar__button--open" : ""]
-          .filter(Boolean)
-          .join(" ")}
+        className="vm-btn"
+        data-menu-trigger
+        data-open={open ? "" : undefined}
         disabled={!node.enabled}
         aria-haspopup="menu"
         aria-expanded={open}

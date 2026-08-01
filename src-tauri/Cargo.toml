@@ -118,13 +118,6 @@ objc2-core-foundation = { version = "0.3", features = ["CFRunLoop", "CFString"] 
 # RW-16 (L8): Windows Credential Manager backend (best-effort platform).
 [target.'cfg(target_os = "windows")'.dependencies]
 keyring = { version = "3", features = ["windows-native"] }
-# Undecorated-window workaround: tao 0.35 leaves WS_CAPTION on top-level
-# windows even with decorations(false) (see app_setup.rs), so we strip the
-# caption/sysmenu styles post-creation via Win32.
-windows-sys = { version = "0.61", features = [
-  "Win32_Foundation",
-  "Win32_UI_WindowsAndMessaging",
-] }
 
 # RW-16 (L8): Linux Secret Service backend (best-effort platform).
 [target.'cfg(target_os = "linux")'.dependencies]

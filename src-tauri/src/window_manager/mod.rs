@@ -16,12 +16,10 @@
 //! | `commands` | `open_*_in_new_window`, `close_window`, quit commands |
 //! | `settings_window` | Settings window singleton (create / focus / navigate) |
 //! | `native_theme` | Keeps macOS OS-drawn chrome (title bar, menu bar) on the in-app theme |
-//! | `strip_caption` (top-level, Windows) | Removes WS_CAPTION/SYSMENU/min-max from undecorated windows |
 //!
 //! Key decisions:
-//!   - Windows windows are created undecorated (per-platform config) and
-//!     `strip_caption` removes the residual caption styles that tao's
-//!     `decorations(false)` leaves on top-level windows.
+//!   - Windows windows are created undecorated through Tauri/tao; native frame
+//!     styles must remain owned by tao so its layout state stays synchronized.
 //!
 //! Everything is re-exported here so call sites keep using
 //! `crate::window_manager::...` (and `lib.rs`'s `generate_handler!` paths
@@ -46,53 +44,6 @@ pub use document_windows::*;
 pub use file_open_state::*;
 pub use native_theme::*;
 pub use settings_window::*;
-
-/// Strip the caption/sysmenu/min-max box styles from a Windows HWND.
-///
-/// tao 0.35's `decorations(false)` does not remove `WS_CAPTION` on top-level
-/// windows (it only does so for CHILD windows), so a config-declared
-/// undecorated window still gets an OS title bar. This applies the classic
-/// undecorated style set directly:
-///   - remove WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX
-///   - keep WS_THICKFRAME so tao's WM_NCHITTEST edge-resize still works
-///   - SWP_FRAMECHANGED forces the frame to redraw
-#[cfg(target_os = "windows")]
-pub fn strip_caption(hwnd: *mut core::ffi::c_void) -> Result<(), String> {
-    use windows_sys::Win32::UI::WindowsAndMessaging::{
-        GetWindowLongW, SetWindowLongW, SetWindowPos, GWL_STYLE, SWP_FRAMECHANGED, SWP_NOACTIVATE,
-        SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER, WS_CAPTION, WS_MAXIMIZEBOX, WS_MINIMIZEBOX,
-        WS_SYSMENU,
-    };
-
-    if hwnd.is_null() {
-        return Err("null HWND".to_string());
-    }
-    let style = unsafe { GetWindowLongW(hwnd, GWL_STYLE) };
-    let new_style = style & !(WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX) as i32;
-    if new_style == style {
-        return Ok(()); // already undecorated
-    }
-    let result = unsafe { SetWindowLongW(hwnd, GWL_STYLE, new_style) };
-    if result == 0 {
-        return Err("SetWindowLongW failed".to_string());
-    }
-    // Force the non-client area to recompute with the new style.
-    let ok = unsafe {
-        SetWindowPos(
-            hwnd,
-            std::ptr::null_mut(),
-            0,
-            0,
-            0,
-            0,
-            SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED,
-        )
-    };
-    if ok == 0 {
-        return Err("SetWindowPos failed".to_string());
-    }
-    Ok(())
-}
 
 #[cfg(test)]
 #[path = "mod.test.rs"]

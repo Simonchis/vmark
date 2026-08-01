@@ -6,9 +6,9 @@
  * windows, self-drawn title bar) renders these; macOS keeps the native
  * traffic lights, so this component renders nothing there.
  *
- * The buttons use the Tauri window API directly. The close button follows the
- * app's quit-confirmation flow via the existing `request_quit` command rather
- * than the raw `close()` so unsaved-changes prompts still run.
+ * Minimize/maximize use the Tauri window API directly. Close invokes the Rust
+ * close-request path so document windows keep unsaved-change interception and
+ * auxiliary windows close normally.
  *
  * @coordinates-with components/TitleBar — the document title bar hosts these
  * @coordinates-with pages/Settings — the settings window hosts these
@@ -16,8 +16,8 @@
  */
 
 import { useEffect, useState } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { isWindowsPlatform } from "@/utils/platform";
 import "./window-controls.css";
 
@@ -59,7 +59,6 @@ export function WindowControls() {
     void win.toggleMaximize().then(() => win.isMaximized().then(setMaximized));
   };
   const onClose = () => {
-    // Route through the coordinated quit flow (unsaved-changes prompts).
     void invoke("request_quit");
   };
 
@@ -67,7 +66,8 @@ export function WindowControls() {
     <div className="window-controls" aria-label="Window controls">
       <button
         type="button"
-        className="window-controls__btn"
+        className="vm-btn"
+        data-window-control="minimize"
         aria-label="Minimize"
         onClick={onMinimize}
       >
@@ -77,7 +77,8 @@ export function WindowControls() {
       </button>
       <button
         type="button"
-        className="window-controls__btn"
+        className="vm-btn"
+        data-window-control="maximize"
         aria-label={maximized ? "Restore" : "Maximize"}
         onClick={onToggleMaximize}
       >
@@ -94,7 +95,8 @@ export function WindowControls() {
       </button>
       <button
         type="button"
-        className="window-controls__btn window-controls__btn--close"
+        className="vm-btn"
+        data-window-control="close"
         aria-label="Close"
         onClick={onClose}
       >

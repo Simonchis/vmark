@@ -21,7 +21,7 @@
   position: relative;
 }
 
-.menu-bar__button {
+.menu-bar [data-menu-trigger] {
   height: 100%;
   padding: 0 var(--space-2);
   border: none;
@@ -33,23 +33,23 @@
   white-space: nowrap;
 }
 
-.menu-bar__button:hover:not(:disabled),
-.menu-bar__button--open {
+.menu-bar [data-menu-trigger]:hover:not(:disabled),
+.menu-bar [data-menu-trigger][data-open] {
   background: var(--hover-bg);
 }
 
-.menu-bar__button:disabled {
+.menu-bar [data-menu-trigger]:disabled {
   opacity: var(--opacity-disabled);
   cursor: default;
 }
 
 /* Focus: U-shaped underline (33-focus-indicators.md). */
-.menu-bar__button:focus-visible {
+.menu-bar [data-menu-trigger]:focus-visible {
   outline: none;
   position: relative;
 }
 
-.menu-bar__button:focus-visible::after {
+.menu-bar [data-menu-trigger]:focus-visible::after {
   content: "";
   position: absolute;
   bottom: 2px;

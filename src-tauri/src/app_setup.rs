@@ -2,15 +2,15 @@
 //!
 //! Purpose: Hosts `run()`'s setup closure, the `RunEvent` / window-event
 //! handlers, and the Windows self-drawn chrome setup (hide the native menu
-//! bar via an empty per-window menu, strip the OS caption). Extracted
-//! verbatim from `lib.rs` to keep that file under the size gate.
+//! bar via an empty per-window menu). Extracted verbatim from `lib.rs` to keep
+//! that file under the size gate.
 //!
 //! Key decisions:
 //!   - Window close is intercepted for document windows (main, doc-*) to allow
 //!     dirty-document prompts; non-document windows close immediately.
 //!   - Windows self-drawn chrome: after `set_menu`, the native menu bar is
-//!     hidden via an empty per-window menu and the OS caption is stripped with
-//!     `window_manager::strip_caption`; the frontend renders MenuBar/WindowControls.
+//!     hidden via an empty per-window menu; tao remains responsible for its
+//!     undecorated-window styles and non-client-area bookkeeping.
 //!   - `machine_id_hash()` generates a stable anonymous device identifier via
 //!     SHA-256(hostname + OS + arch), sent as `X-Machine-Id` header on update checks.
 
@@ -44,16 +44,6 @@ pub(crate) fn machine_id_hash() -> String {
 /// Extracted from `run`'s former inline `.setup` closure so the setup steps are
 /// individually readable and the builder chain stays declarative.
 pub(crate) fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-    // Debug: verify the merged platform config reached the runtime.
-    for w in app.config().app.windows.iter() {
-        log::info!(
-            "[setup] window '{}' decorations={} shadow={}",
-            w.label,
-            w.decorations,
-            w.shadow
-        );
-    }
-
     app.manage(pty::PtyState::default());
 
     // Coherence layer: per-installation writer identity (spec §2.2) +
@@ -75,13 +65,10 @@ pub(crate) fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::
     app.set_menu(menu)?;
 
     // Windows: the `main` window's chrome is configured per platform via
-    // tauri.windows.conf.json (decorations: false + shadow). tao 0.35 has a
-    // bug where decorations(false) leaves WS_CAPTION on top-level windows, so
-    // strip the caption/sysmenu styles post-creation. The window-level empty
-    // menu hides the native menu bar (the frontend title bar draws the menu);
-    // the app-wide menu is kept because it backs `get_menu_tree`
-    // serialization. Document windows get the same treatment in their
-    // builder.
+    // tauri.windows.conf.json (decorations: false + shadow). The window-level
+    // empty menu hides the native menu bar (the frontend title bar draws the
+    // menu); the app-wide menu is kept because it backs `get_menu_tree`
+    // serialization. Document windows get the same treatment in their builder.
     #[cfg(target_os = "windows")]
     {
         if let Some(main_win) = app.get_webview_window("main") {
@@ -93,11 +80,7 @@ pub(crate) fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::
                 }
                 Err(e) => log::warn!("[setup] failed to build empty menu: {e}"),
             }
-            if let Ok(hwnd) = main_win.hwnd() {
-                if let Err(e) = crate::window_manager::strip_caption(hwnd.0) {
-                    log::warn!("[setup] failed to strip main window caption: {e}");
-                }
-            }        } else {
+        } else {
             log::warn!("[setup] main window not found at setup time");
         }
     }

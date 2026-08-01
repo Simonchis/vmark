@@ -125,8 +125,7 @@ export function SettingsPage() {
   const { t } = useTranslation("settings");
   const isMac = isMacPlatform();
   const isWindows = isWindowsPlatform();
-  // Self-drawn chrome: macOS (overlay) and Windows (undecorated) both need
-  // the frontend drag region; the native title bar is hidden on both.
+  // Both overlay/undecorated platforms need a frontend drag region.
   const hasSelfDrawnChrome = isMac || isWindows;
   // Read initial section from URL query params
   const getInitialSection = (): Section => {
@@ -261,11 +260,7 @@ export function SettingsPage() {
         </div>
       </div>
 
-      {/* Content area */}
-      {/* min-w-0: without it this flex item cannot shrink below its content's
-          min-content width (e.g. an unbreakable release-notes URL plus the
-          update card's button column), and the whole window grows a
-          document-level horizontal scrollbar. */}
+      {/* min-w-0 prevents wide content from expanding the entire window. */}
       <div className="flex-1 flex flex-col min-w-0">
         {hasSelfDrawnChrome && <div data-tauri-drag-region className="h-12 shrink-0" />}
         {/* Content */}
@@ -294,8 +289,7 @@ export function SettingsPage() {
           </span>
         </div>
       )}
-      {/* Windows: self-drawn window controls (min/max/close) — the native
-          title bar is hidden on undecorated windows. */}
+      {/* Windows self-drawn window controls. */}
       {isWindows && (
         <div className="absolute top-0 right-0 h-12 z-10">
           <WindowControls />

@@ -79,9 +79,11 @@ pub fn force_quit(app: AppHandle) {
     app.exit(0);
 }
 
-/// Request quit - emits event to all windows for confirmation
+/// Request the invoking window to close through Tauri's native close path.
+///
+/// Document windows are intercepted by the window event handler for unsaved
+/// changes; auxiliary windows such as Settings close immediately.
 #[tauri::command]
-pub fn request_quit(app: AppHandle) {
-    use tauri::Emitter;
-    let _ = app.emit("app:quit-requested", ());
+pub fn request_quit(window: tauri::WebviewWindow) -> Result<(), String> {
+    window.close().map_err(|error| error.to_string())
 }

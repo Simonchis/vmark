@@ -11,7 +11,7 @@
   flex-shrink: 0;
 }
 
-.window-controls__btn {
+.window-controls .vm-btn {
   width: 46px;
   height: 100%;
   display: flex;
@@ -26,29 +26,29 @@
   transition: background var(--duration-fast) ease-out, color var(--duration-fast) ease-out;
 }
 
-.window-controls__btn svg {
+.window-controls .vm-btn svg {
   width: 10px;
   height: 10px;
 }
 
-.window-controls__btn:hover {
+.window-controls .vm-btn:hover {
   background: var(--hover-bg);
   color: var(--text-color);
 }
 
 /* Close hover: Windows convention — danger red fills the button. */
-.window-controls__btn--close:hover {
+.window-controls .vm-btn[data-window-control="close"]:hover {
   background: var(--error-color);
   color: var(--contrast-text, #fff);
 }
 
 /* Focus: visible underline (accessibility, U-shaped indicator). */
-.window-controls__btn:focus-visible {
+.window-controls .vm-btn:focus-visible {
   outline: none;
   position: relative;
 }
 
-.window-controls__btn:focus-visible::after {
+.window-controls .vm-btn:focus-visible::after {
   content: "";
   position: absolute;
   bottom: 2px;
