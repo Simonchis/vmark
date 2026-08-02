@@ -10,6 +10,7 @@
 //! (pure) → small handler → emit/queue helper in `menu_events.rs`.
 //!
 //! Key decisions:
+//!   - Window-creating handlers run on background threads (see below).
 //!   - `classify_menu_id` and `decide_document_routing` are pure so the
 //!     dispatch contract is testable without a Tauri `AppHandle`.
 //!   - `handle_menu_id` is the single shared entry for both native clicks and
