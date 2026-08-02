@@ -5,19 +5,25 @@
 //! section into the URL the Settings window is built with. That URL is the
 //! one difference between the two Settings entry points (#1141), so it is
 //! worth pinning down exactly.
+//!
+//! The window is routed by its **label** in the frontend (see
+//! `utils/windowPage.ts`), so the URL only needs to serve `index.html` (at
+//! `/`) and carry the optional `section` query param. Tauri's production
+//! asset protocol rewrites non-file paths back to `/`, so we serve `/`
+//! directly to keep the query string intact in packaged builds.
 
 use super::*;
 
 #[test]
-fn no_section_is_the_bare_route() {
-    assert_eq!(settings_url(None), "/settings");
+fn no_section_is_the_root_route() {
+    assert_eq!(settings_url(None), "/");
 }
 
 #[test]
-fn section_becomes_a_query_param() {
+fn section_becomes_a_query_param_on_root() {
     assert_eq!(
         settings_url(Some("integrations")),
-        "/settings?section=integrations"
+        "/?section=integrations"
     );
 }
 
@@ -41,7 +47,7 @@ fn known_sections_round_trip_unescaped() {
     ] {
         assert_eq!(
             settings_url(Some(section)),
-            format!("/settings?section={section}"),
+            format!("/?section={section}"),
             "section `{section}` should not be escaped"
         );
     }
@@ -56,26 +62,26 @@ fn reserved_characters_are_percent_encoded() {
         !url.contains('&') && !url.contains('#'),
         "reserved chars must be encoded, got {url}"
     );
-    assert_eq!(url, "/settings?section=a%26b%3Dc%23d%3Fe");
+    assert_eq!(url, "/?section=a%26b%3Dc%23d%3Fe");
 }
 
 #[test]
 fn spaces_and_unicode_are_encoded() {
-    assert_eq!(settings_url(Some("a b")), "/settings?section=a%20b");
+    assert_eq!(settings_url(Some("a b")), "/?section=a%20b");
     assert_eq!(
         settings_url(Some("中文")),
-        "/settings?section=%E4%B8%AD%E6%96%87"
+        "/?section=%E4%B8%AD%E6%96%87"
     );
 }
 
 /// The command filters empty sections to `None` before calling through, but
 /// the builder should still be well-behaved if one arrives: an empty query
-/// value must not produce a route the SPA cannot match.
+/// value must not corrupt the root route.
 #[test]
-fn empty_section_still_yields_a_matchable_route() {
+fn empty_section_stays_on_the_root_route() {
     let url = settings_url(Some(""));
     assert!(
-        url.starts_with("/settings"),
-        "route must stay /settings, got {url}"
+        url.starts_with("/?section="),
+        "route must stay on / with a section query, got {url}"
     );
 }

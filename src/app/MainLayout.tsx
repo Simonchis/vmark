@@ -1,0 +1,203 @@
+/**
+ * Main editor layout for document windows (`main`, `doc-*`).
+ *
+ * Extracted from `App.tsx` so that `AppRoutes` can lazy-load it — the editor
+ * dependency tree is large, and importing it eagerly at the routing layer
+ * would pull the whole tree into the coverage denominator and into every
+ * window's bundle evaluation.
+ *
+ * @module app/MainLayout
+ */
+
+import { lazy, Suspense, type CSSProperties } from "react";
+import { useTranslation } from "react-i18next";
+import { DocumentSplitContainer } from "@/components/Editor";
+import { Sidebar } from "@/components/Sidebar";
+import { SidebarResizeHandle } from "@/components/Sidebar/SidebarResizeHandle";
+import { WorkspaceRail, WORKSPACE_RAIL_WIDTH } from "@/components/WorkspaceRail";
+import { shellSideWidth } from "@/shell/shellChrome";
+import { BottomBar } from "@/components/BottomBar/BottomBar";
+import { AppShell, EditorArea } from "@/shell";
+import { appShellClassName } from "@/shell/appShellClassName";
+import { GeniePickerOverlay } from "@/components/GeniePicker/GeniePickerOverlay";
+import { EditorContextMenu } from "@/components/Editor/EditorContextMenu/EditorContextMenu";
+import { ApprovalDialog } from "@/components/WorkflowApproval/ApprovalDialog";
+import { BrowserApprovalDialog } from "@/components/Browser/BrowserApprovalDialog";
+import { WorkspaceApprovalDialog } from "@/components/Workspace/WorkspaceApprovalDialog";
+import { AppTitleBar } from "@/components/Browser/AppTitleBar";
+import { QuickOpen } from "@/components/QuickOpen/QuickOpen";
+import { ContentSearch } from "@/components/ContentSearch/ContentSearch";
+import { QuickLookOverlay } from "@/components/QuickLook/QuickLookOverlay";
+import { KnowledgeBaseOverlay } from "@/components/KnowledgeBasePanel/KnowledgeBaseOverlay";
+import { WindowStatusOverlay } from "@/components/WindowStatusPanel/WindowStatusOverlay";
+import { CoherenceOverlays } from "@/components/CoherenceOverlays";
+import { useWindowStatus } from "@/hooks/useWindowStatus";
+import { CommandPalette } from "@/components/CommandPalette";
+import { isWindowsPlatform } from "@/utils/platform";
+import { useIsDocumentWindow, useWindowLabel } from "@/contexts/WindowContext";
+import { useUIStore } from "@/stores/uiStore";
+import { useSettingsStore } from "@/stores/settingsStore";
+import { useTheme } from "@/hooks/useTheme";
+import { useTerminalPosition } from "@/components/Terminal/useTerminalPosition";
+import { useTabModeSync } from "@/hooks/useTabModeSync";
+import { useBrowserWorkspaceActive } from "@/components/Browser/useBrowserWorkspaceState";
+import {
+  useWorkspaceLifecycle,
+  useEditorLifecycle,
+  DocumentWindowMount,
+  MainWindowRunners,
+} from "@/hooks/lifecycle";
+import { cssVars } from "@/theme";
+import { useBrowserOccluder } from "@/hooks/useBrowserOccluder";
+import { FeatureErrorBoundary } from "@/components/FeatureErrorBoundary";
+
+const TerminalPanel = lazy(() =>
+  import("@/components/Terminal").then((m) => ({ default: m.TerminalPanel })),
+);
+
+// ADR-014 sample migration — visual values come from the typed accessor
+// in `@/theme`. Non-token literals (z-index, border width, viewport
+// margins) stay literal per the ADR's "what stays literal" exemption.
+const DROP_OVERLAY_BORDER_WIDTH = 3;
+const DROP_OVERLAY_Z = 9998;
+const DROP_OVERLAY_MARGIN = 8;
+const DROP_LABEL_FONT_SIZE = 14;
+
+function DropOverlay() {
+  const { t } = useTranslation();
+  const isDragging = useUIStore((state) => state.isDraggingFiles);
+  // The native browser view paints over all React DOM in its rect, so freeze every
+  // mounted browser tab while this overlay is up (WI-SOC.1).
+  useBrowserOccluder(isDragging, "file-drop");
+  if (!isDragging) return null;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        backgroundColor: cssVars.color.accent.bg,
+        border: `${DROP_OVERLAY_BORDER_WIDTH}px dashed ${cssVars.color.accent.primary}`,
+        borderRadius: cssVars.radius.lg,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: DROP_OVERLAY_Z,
+        pointerEvents: "none",
+        margin: DROP_OVERLAY_MARGIN,
+      }}
+    >
+      <div
+        style={{
+          padding: `${cssVars.space[4]} ${cssVars.space[6]}`,
+          backgroundColor: cssVars.color.bg.primary,
+          borderRadius: cssVars.radius.md,
+          boxShadow: cssVars.shadow.popup,
+          color: cssVars.color.text.primary,
+          fontSize: DROP_LABEL_FONT_SIZE,
+          fontWeight: 500,
+        }}
+      >
+        {t("dropToOpen")}
+      </div>
+    </div>
+  );
+}
+
+export function MainLayout() {
+  const { t } = useTranslation("dialog");
+  // Window context + store selectors. State reads only, not lifecycle hooks.
+  const isDocumentWindow = useIsDocumentWindow();
+  const windowLabel = useWindowLabel();
+  const focusModeEnabled = useUIStore((state) => state.focusModeEnabled);
+  const typewriterModeEnabled = useUIStore((state) => state.typewriterModeEnabled);
+  const sidebarVisible = useUIStore((state) => state.sidebarVisible);
+  const sidebarWidth = useUIStore((state) => state.sidebarWidth);
+  const findBarOpen = useUIStore((state) => state.search.isOpen);
+  const terminalPosition = useUIStore((state) => state.effectiveTerminalPosition);
+  // Primitive boolean selector — the shell re-renders only when this flips, not
+  // on every tab-metadata change (a full-projection read would do the latter).
+  const browserWorkspaceActive = useBrowserWorkspaceActive();
+  const workspaceRailMode = useSettingsStore((state) => state.general.workspaceRailMode);
+  const showWorkspaceRail = isDocumentWindow && workspaceRailMode;
+  // One definition, shared with the terminal's layout maths (see shellChrome).
+  const sideWidth = shellSideWidth({ workspaceRailVisible: showWorkspaceRail, sidebarVisible, sidebarWidth });
+
+  // T03 lifecycle composites — every per-document/per-window hook now
+  // lives in src/hooks/lifecycle/. Adding a shortcut or sync hook
+  // edits a composite, not App.tsx.
+  useWorkspaceLifecycle();
+  useEditorLifecycle();
+  useTheme();
+  useTerminalPosition();
+  useTabModeSync();
+  useWindowStatus();
+
+  const className = appShellClassName({ focusMode: focusModeEnabled, typewriterMode: typewriterModeEnabled, findBarOpen, browserWorkspaceActive, workspaceRailVisible: showWorkspaceRail, windowsChrome: isWindowsPlatform() });
+
+  return (
+    <AppShell
+      className={className}
+      // Single source for the rail width: descendants (incl. the browser-active
+      // layout offsets) inherit it from here instead of a hardcoded CSS value.
+      style={{ "--workspace-rail-width": `${WORKSPACE_RAIL_WIDTH}px` } as CSSProperties}
+      chrome={<AppTitleBar />}
+      sidebar={
+        showWorkspaceRail || sidebarVisible ? (
+          <div className="app-sidebar-stack">
+            {showWorkspaceRail && (
+              <div className="app-sidebar-stack__rail">
+                <WorkspaceRail windowLabel={windowLabel} />
+              </div>
+            )}
+            {sidebarVisible && (
+              <div className="app-sidebar-stack__sidebar" style={{ width: sidebarWidth }}>
+                <Sidebar />
+                <SidebarResizeHandle width={sidebarWidth} />
+              </div>
+            )}
+          </div>
+        ) : null
+      }
+      sidebarWidth={sideWidth}
+      primary={
+        <EditorArea
+          editor={
+            <FeatureErrorBoundary feature={t("errorBoundary.feature.editor")}>
+              <DocumentSplitContainer />
+            </FeatureErrorBoundary>
+          }
+          bottomBar={<BottomBar />}
+          panel={
+            <FeatureErrorBoundary feature={t("errorBoundary.feature.terminal")}>
+              <Suspense fallback={null}>
+                <TerminalPanel />
+              </Suspense>
+            </FeatureErrorBoundary>
+          }
+          panelPosition={terminalPosition}
+          sidePanel={<KnowledgeBaseOverlay />}
+        />
+      }
+      overlays={
+        <>
+          {isDocumentWindow && <DocumentWindowMount />}
+          {windowLabel === "main" && <MainWindowRunners />}
+
+          <DropOverlay />
+          <QuickOpen windowLabel={windowLabel} />
+          <ContentSearch windowLabel={windowLabel} />
+          <QuickLookOverlay />
+          <WindowStatusOverlay />
+          <CoherenceOverlays />
+          <GeniePickerOverlay />
+          <EditorContextMenu />
+          <ApprovalDialog />
+          <BrowserApprovalDialog />
+          <WorkspaceApprovalDialog />
+          <CommandPalette />
+        </>
+      }
+    />
+  );
+}

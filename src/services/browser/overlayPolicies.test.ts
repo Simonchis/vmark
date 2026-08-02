@@ -72,10 +72,10 @@ describe("overlay occlusion registry", () => {
       // BrowserApprovalDialog drives browserOcclusion directly (it freezes the ONE tab
       // the request targets, not every mounted browser), so it is exempt by design.
       if (name === "BrowserApprovalDialog") return null;
-      // DropOverlay is defined inline in App.tsx.
+      // DropOverlay is defined inline in the main layout module.
       const candidates =
         name === "DropOverlay"
-          ? ["src/App.tsx"]
+          ? ["src/app/MainLayout.tsx"]
           : globSyncish(name);
       for (const c of candidates) {
         try {

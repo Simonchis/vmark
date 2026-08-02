@@ -21,12 +21,18 @@ pub fn open_settings_window(app: AppHandle, section: Option<String>) -> Result<S
 
 /// Build the Settings window URL for an optional section.
 ///
+/// The window is routed by its **label** in the frontend (see
+/// `utils/windowPage.ts`), not by URL path, because Tauri's production asset
+/// protocol rewrites non-file paths back to `/`. Serving `/` directly keeps
+/// the `section` query string intact (a rewritten `/settings?section=…` would
+/// lose it), so the initial section still works in packaged builds.
+///
 /// The section is percent-encoded so a value containing reserved characters
 /// (`&`, `?`, `#`) cannot corrupt the query or append a fragment.
 fn settings_url(section: Option<&str>) -> String {
     match section {
-        Some(s) => format!("/settings?section={}", urlencoding::encode(s)),
-        None => "/settings".to_string(),
+        Some(s) => format!("/?section={}", urlencoding::encode(s)),
+        None => "/".to_string(),
     }
 }
 
