@@ -21,18 +21,12 @@ pub fn open_settings_window(app: AppHandle, section: Option<String>) -> Result<S
 
 /// Build the Settings window URL for an optional section.
 ///
-/// The window is routed by its **label** in the frontend (see
-/// `utils/windowPage.ts`), not by URL path, because Tauri's production asset
-/// protocol rewrites non-file paths back to `/`. Serving `/` directly keeps
-/// the `section` query string intact (a rewritten `/settings?section=…` would
-/// lose it), so the initial section still works in packaged builds.
-///
 /// The section is percent-encoded so a value containing reserved characters
 /// (`&`, `?`, `#`) cannot corrupt the query or append a fragment.
 fn settings_url(section: Option<&str>) -> String {
     match section {
-        Some(s) => format!("/?section={}", urlencoding::encode(s)),
-        None => "/".to_string(),
+        Some(s) => format!("/settings?section={}", urlencoding::encode(s)),
+        None => "/settings".to_string(),
     }
 }
 
@@ -102,6 +96,7 @@ pub fn show_settings_window_section(
 
     #[cfg(not(target_os = "macos"))]
     {
+        log::debug!("[window_manager] settings: building empty window menu");
         builder = builder
             .menu(tauri::menu::Menu::new(app)?)
             .center()
@@ -117,7 +112,15 @@ pub fn show_settings_window_section(
         builder = builder.decorations(false).shadow(true);
     }
 
+    // `builder.build()` synchronously creates the OS window and initializes the
+    // WebView2 controller; on Windows this pumps the calling thread's message
+    // queue until the controller callback fires (wry `wait_with_pump`). If the
+    // app ever appears to hang here, check for stray `WEBVIEW2_ADDITIONAL_`
+    // browser arguments (remote debugging) — that combination can stall the
+    // controller callback of non-first webviews entirely.
+    log::debug!("[window_manager] settings: creating window (builder.build)");
     let window = builder.build()?;
+    log::debug!("[window_manager] settings: window created");
 
     #[cfg(target_os = "macos")]
     {
