@@ -9,7 +9,7 @@
 //! used by the Windows MenuBar `menu_click` command) → `classify_menu_id`
 //! (pure) → small handler → emit/queue helper in `menu_events.rs`.
 //!
-//! Key decisions (thread-safety, Windows):
+//! Key decisions: (thread-safety — window creation is background-threaded)
 //!   - Window-creating handlers run on background threads (see below).
 //!   - `classify_menu_id` and `decide_document_routing` are pure so the
 //!     dispatch contract is testable without a Tauri `AppHandle`.
