@@ -14,6 +14,12 @@
 //!     dispatch contract is testable without a Tauri `AppHandle`.
 //!   - `handle_menu_id` is the single shared entry for both native clicks and
 //!     frontend MenuBar clicks, so Windows self-drawn menus behave identically.
+//!   - Window-creating handlers (`preferences`, `about`, `new-window`, `new`
+//!     without document windows, and the `CreateWindowAndQueue` routing arm)
+//!     run on a background thread: native menu events dispatch on the main
+//!     thread, and wry's `create_window` deadlocks there — `wait_with_pump`
+//!     never receives the WebView2 controller callback, leaving a blank
+//!     Settings window and a frozen app on Windows.
 //!   - Malformed dynamic ids (e.g. `recent-file-abc`) classify as `Generic`,
 //!     matching the historical fall-through behavior.
 //!   - Recent-file/workspace and open/open-folder/quick-open share one
@@ -160,7 +166,12 @@ pub fn handle_menu_id(app: &AppHandle, id: &str) {
         MenuAction::New => handle_new(app, id),
         MenuAction::Close => handle_close(app),
         MenuAction::OpenLike => {
-            route_to_document_window(app, make_menu_event(&format!("menu:{id}")))
+            // Background thread: with no document windows this branch creates
+            // one, which must not happen on the main thread (see
+            // `handle_new_window` for the wry deadlock rationale).
+            let app = app.clone();
+            let event = make_menu_event(&format!("menu:{id}"));
+            std::thread::spawn(move || route_to_document_window(&app, event));
         }
         MenuAction::Generic => emit_generic(app, id),
     }
@@ -183,16 +194,24 @@ fn handle_save_all_quit(app: &AppHandle) {
 /// Recent-file click: resolve the path from the snapshot taken at menu build
 /// time (avoids TOCTOU races with the store) and route it. A missing path
 /// (snapshot shrank since build) is a deliberate no-op.
+///
+/// Background thread: `route_to_document_window` can create a document window
+/// (no document windows open), which must not happen on the main thread.
 fn handle_recent_file(app: &AppHandle, index: usize) {
     if let Some(path) = crate::menu::get_recent_file_path(index) {
-        route_to_document_window(app, make_recent_file_event(&path));
+        let app = app.clone();
+        std::thread::spawn(move || route_to_document_window(&app, make_recent_file_event(&path)));
     }
 }
 
 /// Recent-workspace click: same snapshot lookup and routing as recent files.
+/// Background thread (may create a document window — see `handle_recent_file`).
 fn handle_recent_workspace(app: &AppHandle, index: usize) {
     if let Some(path) = crate::menu::get_recent_workspace_path(index) {
-        route_to_document_window(app, make_recent_workspace_event(&path));
+        let app = app.clone();
+        std::thread::spawn(move || {
+            route_to_document_window(&app, make_recent_workspace_event(&path))
+        });
     }
 }
 
@@ -233,38 +252,64 @@ fn handle_install_cli(app: &AppHandle, id: &str) {
 }
 
 /// "new-window" creates a new window directly in Rust.
+///
+/// Runs on a background thread: menu events dispatch on the main thread, and
+/// wry's `create_window` must not be called there (its `wait_with_pump` then
+/// never receives the WebView2 controller callback and deadlocks — frozen
+/// app with a blank new window).
 fn handle_new_window(app: &AppHandle) {
-    if let Err(e) = crate::window_manager::create_document_window(app, None, None) {
-        log::error!("[menu_events] Failed to create window for 'new-window': {e}");
-    }
+    let app = app.clone();
+    std::thread::spawn(move || {
+        if let Err(e) = crate::window_manager::create_document_window(&app, None, None) {
+            log::error!("[menu_events] Failed to create window for 'new-window': {e}");
+        }
+    });
 }
 
 /// "preferences" is always handled in Rust so it works whether the Settings
 /// window is open, backgrounded, or absent — even with no document windows.
+///
+/// Runs on a background thread for the same reason as `handle_new_window`:
+/// creating the Settings window on the main thread (menu event dispatch)
+/// deadlocks wry's WebView2 controller init on Windows — blank Settings
+/// window and an app that cannot be closed.
 fn handle_preferences(app: &AppHandle) {
     log::debug!("[menu_events] Handling 'preferences' menu event");
-    match crate::window_manager::show_settings_window(app) {
+    let app = app.clone();
+    std::thread::spawn(move || match crate::window_manager::show_settings_window(&app) {
         Ok(label) => log::debug!("[menu_events] Settings window ready: {label}"),
         Err(e) => log::error!("[menu_events] Failed to show settings: {e}"),
-    }
+    });
 }
 
 /// "about" opens the Settings window at the About section.
+///
+/// Also background-threaded (same main-thread deadlock constraint as
+/// `handle_preferences`).
 fn handle_about(app: &AppHandle) {
     log::debug!("[menu_events] Handling 'about' menu event");
-    match crate::window_manager::show_settings_window_section(app, Some("about")) {
-        Ok(label) => log::debug!("[menu_events] Settings window (about) ready: {label}"),
-        Err(e) => log::error!("[menu_events] Failed to show about: {e}"),
-    }
+    let app = app.clone();
+    std::thread::spawn(move || {
+        match crate::window_manager::show_settings_window_section(&app, Some("about")) {
+            Ok(label) => log::debug!("[menu_events] Settings window (about) ready: {label}"),
+            Err(e) => log::error!("[menu_events] Failed to show about: {e}"),
+        }
+    });
 }
 
 /// "new" creates a tab in the current window; with no document windows it
 /// creates a new window instead (Cmd+N after the last window closed).
+///
+/// Background thread when creating a window (main-thread `create_window`
+/// deadlocks wry on Windows — see `handle_new_window`).
 fn handle_new(app: &AppHandle, id: &str) {
     if !has_document_windows(app) {
-        if let Err(e) = crate::window_manager::create_document_window(app, None, None) {
-            log::error!("[menu_events] Failed to create window for 'new': {e}");
-        }
+        let app = app.clone();
+        std::thread::spawn(move || {
+            if let Err(e) = crate::window_manager::create_document_window(&app, None, None) {
+                log::error!("[menu_events] Failed to create window for 'new': {e}");
+            }
+        });
     } else {
         emit_generic(app, id);
     }
