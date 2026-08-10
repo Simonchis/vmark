@@ -14,6 +14,12 @@
  *   - CJK stacks name the real Windows font families too (Microsoft YaHei UI,
  *     SimSun-ExtB, FangSong, Noto Serif SC / Noto Sans SC) — macOS-only names
  *     like "SimSun" silently fell back to the generic family on Windows.
+ *   - Known limitations: Latin serif stacks (charter, athelas, literata)
+ *     interpose 'Palatino Linotype' and 'Book Antiqua' before Georgia because
+ *     Charter/Athelas/Literata are macOS-only, and Georgia's '7' glyph ignores
+ *     tabular-nums (10.5 vs 10.14px for the other digits) so digits misalign
+ *     when Charter is absent. Palatino Linotype and Book Antiqua ship with
+ *     Windows and render every digit at the same width.
  *
  * @coordinates-with hooks/useTheme.ts — consumes these to emit CSS vars
  * @coordinates-with components/Terminal/terminalSessionStoreSync.ts — live mono sync
