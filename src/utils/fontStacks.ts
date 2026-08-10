@@ -23,11 +23,11 @@
 export const fontStacks = {
   latin: {
     system: "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
-    athelas: "Athelas, Georgia, serif", // Apple Books default
-    palatino: "Palatino, 'Palatino Linotype', serif",
+    athelas: "Athelas, 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif", // Apple Books default
+    palatino: "Palatino, 'Palatino Linotype', 'Book Antiqua', serif",
     georgia: "Georgia, 'Times New Roman', serif",
-    charter: "Charter, Georgia, serif",
-    literata: "Literata, Georgia, serif", // Google reading font
+    charter: "Charter, 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif",
+    literata: "Literata, 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif", // Google reading font
   },
   cjk: {
     // System default: macOS gets PingFang, Windows gets Microsoft YaHei (UI),

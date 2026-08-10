@@ -362,6 +362,14 @@ body {
   background-color: var(--bg-color);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Force LINING + TABULAR numerals app-wide so every surface (status bar
+   * counts, settings values, editor body, export) renders digits at the same
+   * height and width. Without this, system UI fonts on Windows (Segoe UI)
+   * ship proportional old-style figures by default, so "1" and "7" have
+   * different widths in the word count and settings numbers look misaligned.
+   * Monaco / Cascadia / Consolas (mono fonts) already have equal-width
+   * digits, so this is a no-op for code blocks. */
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 /* Selection */
